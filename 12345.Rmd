@@ -1,0 +1,48 @@
+---
+title: "Super_final"
+author: "SIR"
+date: "April 14, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+df <- read_csv("./orders_train_allvars.csv")
+
+```
+
+
+
+```{r }
+insta<-df%>%
+  select(reordered, add_to_cart_order, order_dow, order_hour_of_day, product_name, aisle, department, days_since_prior_order)
+```
+
+
+
+```{r }
+insta %>% summarise_all(list(~n_distinct(.)))
+```
+```{r }
+# library
+library(treemap)
+library(d3treeR)
+
+# dataset
+group=c(rep("group-1",4),rep("group-2",2),rep("group-3",3))
+subgroup=paste("subgroup" , c(1,2,3,4,1,2,1,2,3), sep="-")
+value=c(13,5,22,12,11,7,3,1,23)
+data=data.frame(group,subgroup,value)
+
+  treemap(data,
+    index = c("group","subgroup")
+    ,vSize = "value"
+    ,type = "index"
+    ,fun.aggregate = "weighted.mean"
+  ) %>%
+  d3tree2( rootname = "General" )
+  
+  
+  
+```
