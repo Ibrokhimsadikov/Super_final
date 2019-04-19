@@ -6,15 +6,23 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+# we'll need the development version of data.tree. If you do not have, install it
+#devtools::install_github("gluc/data.tree")
+#devtools::install_github("timelyportfolio/d3treeR")
 library(tidyverse)
 library(dplyr)
-df <- read_csv("./orders_train_allvars.csv")
+library(treemap)
+library(d3treeR)
 
 ```
 
-
+```{r }
+#read/import the file  that we use 
+df <- read_csv("./orders_train_allvars.csv")
+```
 
 ```{r }
+#Selecting only the columns We need to use for this project. Keep in mind we are using train dataset.
 insta<-df%>%
   select(reordered, add_to_cart_order, order_dow, order_hour_of_day, product_name, aisle, department, days_since_prior_order)
 ```
@@ -22,8 +30,60 @@ insta<-df%>%
 
 
 ```{r }
+#counting how many unique values each column has
 insta %>% summarise_all(list(~n_distinct(.)))
 ```
+
+```{r }
+#here I am removing missing department values which does not make sense
+insta<-insta[!(insta$department=="missing"),]
+```
+
+```{r}
+  #here I am encoding/recoding values of order hour to the categories (I am subsetting them) so that it is more efficient
+insta$order_hour_of_day <- 
+  ifelse(insta$order_hour_of_day >= 0 & insta$order_hour_of_day <7, 'Night',
+  ifelse(insta$order_hour_of_day >= 7 & insta$order_hour_of_day <13, 'Morning',
+  ifelse(insta$order_hour_of_day >= 13 & insta$order_hour_of_day <19, 'Afternoon', 
+  ifelse(insta$order_hour_of_day >= 19 & insta$order_hour_of_day <=23, 'Evening', NA))))
+
+
+```
+
+
+```{r}
+
+#Here I am replacing cart priority ordering with sub categories so that improve efficiency later on when drawing graphs.
+  insta$add_to_cart_order <- 
+  ifelse(insta$add_to_cart_order >= 1 & insta$add_to_cart_order <=4, 'Highest',
+  ifelse(insta$add_to_cart_order >= 5 & insta$add_to_cart_order <=10, 'High',
+  ifelse(insta$add_to_cart_order >= 11 & insta$add_to_cart_order <18, 'Medium', 
+  ifelse(insta$add_to_cart_order >= 18 & insta$add_to_cart_order <25, 'Low', 
+  ifelse(insta$add_to_cart_order >= 25, 'Lowest', NA      )))))
+
+```
+
+
+```{r}
+
+#Here I am changing days of the week from numeric to string/ character
+  insta$order_dow <- 
+  ifelse(insta$order_dow == 0 , 'Sat',
+  ifelse(insta$order_dow == 1 , 'Sun',
+  ifelse(insta$order_dow == 2 , 'Mon', 
+  ifelse(insta$order_dow == 3 , 'Tue', 
+  ifelse(insta$order_dow == 4,  'Wed', 
+  ifelse(insta$order_dow == 5,  'Thur',
+  ifelse(insta$order_dow == 6,  'Fri', NA)))))))
+
+```
+
+
+
+
+
+
+
 ```{r }
 # library
 library(treemap)
