@@ -12,19 +12,20 @@ output: html_document
 library(tidyverse)
 library(dplyr)
 library(treemap)
-library(d3treeR)
+library(d3treeR)#helpful to make zoomable treemap
+library(data.table) #needed to read large files fast
 
 ```
 
 ```{r }
 #read/import the file  that we use 
-df <- read_csv("./orders_train_allvars.csv")
+df <- fread("./orders_train_allvars.csv")
 ```
 
 ```{r }
 #Selecting only the columns We need to use for this project. Keep in mind we are using train dataset.
 insta<-df%>%
-  select(reordered, add_to_cart_order, order_dow, order_hour_of_day, product_name, aisle, department, days_since_prior_order)
+  select(order_id, order_number, user_id, reordered, add_to_cart_order, order_dow, order_hour_of_day, product_name, aisle, department, days_since_prior_order)
 ```
 
 
@@ -76,11 +77,11 @@ insta$order_hour_of_day <-
   ifelse(insta$order_dow == 5,  'Thur',
   ifelse(insta$order_dow == 6,  'Fri', NA)))))))
 
+insta$reordered <- 
+  ifelse(insta$reordered == 0 , 'NO',
+  ifelse(insta$reordered == 1 , 'YES', NA))
+
 ```
-
-
-
-
 
 
 
@@ -88,6 +89,7 @@ insta$order_hour_of_day <-
 # library
 library(treemap)
 library(d3treeR)
+
 
 # dataset
 group=c(rep("group-1",4),rep("group-2",2),rep("group-3",3))
@@ -102,7 +104,43 @@ data=data.frame(group,subgroup,value)
     ,fun.aggregate = "weighted.mean"
   ) %>%
   d3tree2( rootname = "General" )
-  
-  
-  
+
 ```
+
+
+```{r }
+tree1 <- insta %>% 
+  group_by(department, aisle) %>% 
+  summarize(n=n())
+ treemap(tree1,
+    index = c("department","aisle")
+    ,vSize = "n"
+    ,type = "index"
+    ,fun.aggregate = "weighted.mean", palette='Set3', height=800, width=800
+  ) %>%
+  d3tree2( rootname = "General" )
+```
+
+
+```{r }
+
+tree2<-insta %>% 
+  distinct(product_name, .keep_all = TRUE)%>%
+  group_by(department, aisle) %>% 
+  summarize(n=n())
+
+treemap(tree2,
+    index = c("department","aisle")
+    ,vSize = "n"
+    ,type = "index"
+    ,fun.aggregate = "weighted.mean", palette='Set3', height=700, width=700
+  ) %>%
+  d3tree2( rootname = "General" )
+```
+
+
+```{r }
+
+
+```
+
